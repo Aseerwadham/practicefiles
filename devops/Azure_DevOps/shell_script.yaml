@@ -1,0 +1,16 @@
+---
+pool:
+  vmImage: 'ubuntu-latest'
+
+trigger:
+- master
+
+steps:
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: |
+      #!/bin/bash
+
+      # Your shell script goes here
+      echo "Hello, World!"

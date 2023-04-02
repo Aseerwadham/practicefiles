@@ -1,0 +1,307 @@
+resource "azurerm_resource_group" "deployarm_rg" {
+  name     = "armdeploy-resources"
+  location = var.location
+}
+
+resource "azurerm_resource_group_template_deployment" "deployarm_template" {
+  name                = "deployarmtemplate"
+  resource_group_name = azurerm_resource_group.deployarm_rg.name
+  deployment_mode     = "Incremental"
+  template_content    = <<TEMPLATE
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vnetAddressSpace": {
+            "type": "string",
+            "metadata": {
+                "description": "range of vnet"
+            },
+            "defaultValue": "10.0.0.0/16"
+        },
+        "subnetNames": {
+            "type": "array",
+            "metadata": {
+                "description": "names of subnets"
+            },
+            "defaultValue": [ "app", "db", "web" ]
+        },
+        "subnetAddressSpace": {
+            "type": "array",
+            "metadata": {
+                "description": "address Spaces of subnets"
+            },
+            "defaultValue": [ "10.0.0.0/24", "10.0.1.0/24", "10.0.2.0/24" ]
+        },
+        "vmSize": {
+            "type": "string",
+            "metadata": {
+                "description": "size of vm"
+            },
+            "defaultValue": "Standard_B1s"
+        },
+        "adminUserName": {
+            "type": "string",
+            "metadata": {
+                "description": "username for vm"
+            },
+            "defaultValue": "aseedevops"
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "password for vm"
+            }
+        },
+        "dbUserName": {
+            "type": "string",
+            "metadata": {
+                "description": "username for DB"
+            },
+            "defaultValue": "aseeDataBase"
+        },
+        "dbPassword": {
+            "type": "string",
+            "metadata": {
+                "description": "password for DB"
+            },
+            "defaultValue": "aseeDataBase@1234567"
+        },
+        "appSubnet": {
+            "type": "string",
+            "metadata": {
+                "description": "subnet name for vm creation"
+            },
+            "defaultValue": "app"
+        }
+    },
+    "variables": {
+        "vnet-name": "ntier-vnet",
+        "vm-name": "aseeVM",
+        "publicIPAddressName": "vm-public-ip",
+        "networkInterfaceName": "vm-NIF",
+        "networkSecurityGroup": "vm-NSG",
+        "location": "[resourceGroup().location]",
+        "vnet-id": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnet-name'))]",
+        "serverName": "ntierSQLServer",
+        "dbName": "aseeDB",
+        "sqlserver-id": "[resourceId('Microsoft.Sql/servers', variables('serverName'))]",
+        "nic_id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]",
+        "public_id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]",
+        "sub_id": "[resourceId('Microsoft.Network/virtualNetworks/subnets',variables('vnet-name') ,parameters('subnetNames')[0])]",
+        "nsg_id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroup'))]",
+        "app_id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnet-name'),parameters('appSubnet'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2022-09-01",
+            "name": "[variables('vnet-name')]",
+            "location": "[variables('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [ "[parameters('vnetAddressSpace')]" ]
+                }
+
+            },
+            "tags": {
+                "Env": "Dev",
+                "CreatedBy": "ARM"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualnetworks/subnets",
+            "apiVersion": "2022-07-01",
+            "name": "[concat(variables('vm-name'),'/',parameters('subnetNames')[copyIndex()])]",
+            "properties": {
+                "addressPrefix": "[parameters('subnetAddressSpace')[copyIndex()]]"
+            },
+            "copy": {
+                "name": "subnetcopy",
+                "count": "[length(parameters('subnetNames'))]",
+                "mode": "Serial"
+            },
+            "dependsOn": [
+                "[variables('vnet-id')]"
+            ]
+
+        },
+        {
+            "type": "Microsoft.Sql/servers",
+            "apiVersion": "2021-11-01",
+            "location": "[variables('serverName')]",
+            "tags": {
+                "displayName": "[variables('serverName')]"
+            },
+            "properties": {
+                "administratorLogin": "[parameters('dbUserName')]",
+                "administratorLoginPassword": "[parameters('dbPassword')]"
+            },
+            "resources": [
+                {
+                    "type": "firewallRules",
+                    "apiVersion": "2021-11-01",
+                    "location": "[variables('location')]",
+                    "name": "AllowAllWindowsAzureIps",
+                    "properties": {
+                        "startIpAddress": "0.0.0.0",
+                        "enpIpAddress": "0.0.0.0"
+                    },
+                    "dependsOn": [
+                        "[variables('sqlServer-id')]"
+                    ]
+                }
+            ],
+            "dependsOn": [
+                "[variables('vnet-id')]"
+            ]
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases",
+            "apiVersion": "2021-11-01",
+            "name": "[concat(variables('serverName'),'/',variables('dbName'))]",
+            "location": "[variables('location')]",
+            "tags": {
+                "displayName": "[variables('dbName')]"
+            },
+            "properties": {
+                "collation": "SQL_Latin1_General_CP1_CI_AS",
+                "edition": "Basic",
+                "requestedDerviceObjectiveName": "Basic"
+            },
+            "dependsOn": [
+                "[variables('sqlServer-id')]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-05-01",
+            "name": "[variables('publicIPAddressName')]",
+            "location": "[variables('location')]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+            },
+            "sku": {
+                "name": "Basic"
+            }
+
+        },
+
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-05-01",
+            "name": "[variables('networkSecurityGroup')]",
+            "location": "[variables('location')]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "ssh_rule",
+                        "properties": {
+                            "description": "Locks inbound down to ssh default port 22.",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 300,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "http_rule",
+                        "properties": {
+                            "description": "Locks inbound down to http default port 80.",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "80",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 310,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            }
+        },
+
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-05-01",
+            "location": "[variables('location')]",
+            "name": "[variables('networkInterfaceName')]",
+            "tags": {
+                "Env": "Dev",
+                "CreatedBy": "ARM"
+            },
+            "dependsOn": [
+                "[variables('public_id')]",
+                "[variables('vnet-id')]",
+                "[variables('sub_id')]",
+                "[variables('nsg_id')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[variables('public_id')]"
+                            },
+                            "subnet": {
+                                "id": "[variables('app_id')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2022-11-01",
+            "name": "[variables('vm-name')]",
+            "location": "[variables('location')]",
+            "tags": {
+                "Env": "Dev",
+                "CreatedBy": "ARM"
+            },
+            "dependsOn": [
+                "[variables('vnet-id')]",
+                "[variables('sub_id')]",
+                "[variables('nic_id')]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[variables('vm-name')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": false
+                    }
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "0001-com-ubuntu-server-jammy",
+                        "sku": "22_04-lts-gen2",
+                        "version": "latest"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[variables('nic_id')]"
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+ }
+ TEMPLATE
+}

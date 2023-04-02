@@ -1,0 +1,11 @@
+---
+
+pool:
+  name: default
+  vmImage: "Ubuntu-20.04"
+
+trigger:
+  - main
+
+steps: 
+- script: 'ansible-playbook -i C:\Ansible\Java/hosts C:\Ansible\Java/java.yaml'

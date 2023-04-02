@@ -1,0 +1,11 @@
+---
+all:
+  children:
+    20.248.203.102:
+      packages:
+        - nodejs
+        - npm
+    20.203.177.158:
+      packages:
+        - gcc
+        - gcc-c++

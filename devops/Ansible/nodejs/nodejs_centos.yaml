@@ -1,0 +1,14 @@
+---
+- name: install nodejs on centos
+  hosts: all
+  become: yes
+  vars:
+    nodejs_package_name:
+      - gcc
+      - gcc-c++
+  tasks:
+    - name: install nodejs
+      ansible.builtin.yum:
+        name: "{{ nodejs_package_name }}"
+        update_cache: yes
+        state: present

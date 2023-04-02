@@ -1,0 +1,78 @@
+---
+- name: Install Wildfly on Ubantu 20.04
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install default-jdk
+      ansible.builtin.apt:
+        name: default-jdk
+        update-cache: yes
+        state: present
+    - name: create a system group to run wildfly service
+      ansible.builtin.group:
+        name: WildFly
+        state: present
+    - name: create a system user to run wildfly service
+      ansible.builtin.user:
+        name: WildFly
+        create_home: yes
+        home: /opt/wildfly
+        group: WildFly
+        shell: /sbin/nologin
+        state: present
+    - name: Extract wildfly
+      ansible.builtin.unarchive:
+        src: https://download.jboss.org/wildfly/16.0.0.Final/wildfly-16.0.0.Final.tar.gz
+        remote_src: yes
+        dest: /opt/wildfly
+    - name: create a symbolic link
+      ansible.builtin.file:
+        src: /opt/wildfly-WILDFLY_16.0.0
+        dest: /opt/wildfly
+        state: link
+    - name: change permissions
+      ansible.builtin.file:
+        dest: /opt/wildfly
+        recurse: true
+        owner: WildFly
+        group: WildFly
+        state: directory
+    - name: Create a directory
+      ansible.builtin.file:
+        path: /etc/wildfly
+        state: directory
+    - name: copy configuration file to directory
+      ansible.builtin.copy:
+        src: wildfly.conf
+        dest: /etc/wildfly
+    - name: copy script to directory
+      ansible.builtin.copy:
+        src: launch.sh
+        dest: /opt/wildfly/bin/
+    - name: find all the shell files in the binaries
+      ansible.builtin.find:
+        paths: "/opt/tomcat/latest/bin/"
+        pattern: "*.sh" 
+      register: shfiles 
+    - set_fact:
+        shexecution: "{{ shfiles.files | map(attributes='path') | list }}"
+    - name: change permissions of shell files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        mode: 0751
+      with_items: "{{ shexecutables }}"
+    - name: copy systemd unit file to directory
+      ansible.builtin.copy:
+        src: wildfly.service
+        dest: /etc/systemd/system/
+    - name: daemon-reload and start wildfly
+      ansible.builtin.systemd:
+        name: wildfly.service
+        daemon_reload: yes
+        enabled: yes
+        state: started
+        
+
+        
+
+       

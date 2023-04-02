@@ -1,0 +1,17 @@
+---
+pool:
+  name: default
+  vmImage: 'ubuntu-latest'
+
+trigger:
+- master
+
+steps:
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: |
+      #!/bin/bash
+
+      # Update packages
+      sudo apt-get update -y

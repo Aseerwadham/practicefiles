@@ -1,0 +1,4 @@
+[appservers]
+20.203.177.158 java_package_name=java-11-openjdk-devel
+20.248.203.102 java_package_name=openjdk-11-jdk
+

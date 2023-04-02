@@ -1,0 +1,34 @@
+---
+- name: Install apache server on ubuntu
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install apache
+      ansible.builtin.apt:
+        name: apache2
+        update_cache: yes
+        state: present
+      notify: 
+        enable and restart apache2
+    - name: Install php
+      ansible.builtin.apt:
+        name: 
+          - php
+          - libapache2-mod-php
+          - php-mysql
+        update_cache: yes
+        state: present
+      notify:
+        enable and restart apache2
+    - name: copy a file
+      ansible.builtin.copy:
+        src: info.txt
+        dest: /var/www/html/info.txt
+        remote_src: yes
+  handlers:
+    - name: enable and restart apache2
+      ansible.builtin.systemd:
+        name: apache2
+        enabled: yes
+        state: restarted    
+

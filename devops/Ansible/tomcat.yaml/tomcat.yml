@@ -1,0 +1,53 @@
+---
+- name: Install tomcat 10 on Ubuntu 22.04 and Centos 8
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install java on Ubuntu
+      ansible.builtin.apt:
+        name: openjdk-11-jdk
+        update_cache: yes
+        state: present
+    - name: add group
+      ansible.builtin.group:
+        name: tomcat
+        state: present
+    - name: useradd
+      ansible.builtin.user:
+        name: tomcat
+        group: tomcat
+        home: /opt/tomcat  
+        shell: /bin/false
+        state: present
+    - name: Extract the tar file      
+      ansible.builtin.unarchive:
+        src: https://downloads.apache.org/tomcat/tomcat-10/v10.1.4/bin/apache-tomcat-10.1.4.tar.gz
+        dest: /opt/tomcat/
+        remote_src: yes
+    - name: create a symbolic link
+      ansible.builtin.file:
+        src: /opt/tomcat/apache-tomcat-10.1.4
+        dest: /opt/tomcat/latest
+        state: link
+    - name: change permissions
+      ansible.builtin.file:
+        group: tomcat
+        owner: tomcat
+        dest: /opt/tomcat
+        recurse: true
+        state: directory 
+    - name: find all the shell files in the binaries
+      ansible.builtin.find:
+        paths: "/opt/tomcat/latest/bin/"
+        pattern: "*.sh" 
+      register: shfiles 
+    - set_fact:
+        shexecution: "{{ shfiles.files | map(attributes='path') | list }}"
+    - name: change permissions of shell files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        mode: 0751
+      with_items: "{{ shexecutables }}"
+    - name: create a symbolic link
+                    
+

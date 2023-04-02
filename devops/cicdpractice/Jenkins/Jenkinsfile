@@ -1,0 +1,17 @@
+Pipeline {
+    agent ( 'MAVEN_JDK8' )
+    Stages {
+        stage ('git') {
+            agent ('JDK_8')
+            sh "git --version"
+        }
+        stage ('build') {
+            agent ('JDK_8')
+            sh "mvn package"
+        }
+        stage ('deploy') {
+            agent ('K8s')
+            sh 'Kubectl --version'
+        }
+    }
+}

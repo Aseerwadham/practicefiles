@@ -1,0 +1,10 @@
+---
+- name: install nodejs on Ubuntu and Centos
+  hosts: all
+  become: yes
+  tasks:
+    - name: install nodejs
+      ansible.builtin.package:
+        name: "{{ packages }}"
+        state: present
+      loop: "{{ packages }}"

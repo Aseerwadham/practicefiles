@@ -1,0 +1,6 @@
+---
+# tasks file for AseeRole
+- name: java installation
+  ansible.builtin.package:
+    name: "{{ java_package_name }}"
+    state: present

@@ -1,0 +1,14 @@
+---
+pool: 
+  name: "Azure Pipilines"
+  vmImage: ubuntu-latest
+
+trigger:
+  - main
+
+stages:
+  - stage: Build
+    jobs:
+      - job: Build_job
+        steps:
+          - task: "hello world"

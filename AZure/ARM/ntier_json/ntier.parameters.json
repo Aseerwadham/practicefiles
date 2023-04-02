@@ -1,0 +1,41 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vnetAddressSpace": {
+            "value": "10.0.0.0/16"
+        },
+        "subnetNames": {
+            "value": [
+                "app",
+                "db",
+                "web"
+            ]
+        },
+        "subnetAddressSpace": {
+            "value": [
+                "10.0.0.0/24",
+                "10.0.1.0/24",
+                "10.0.2.0/24"
+            ]
+        },
+        "vmSize": {
+            "value": "Standard_B1s"
+        },
+        "adminUserName": {
+            "value": "aseedevops"
+        },
+        "adminPassword": {
+            "value": "" // TODO: Fill in parameter value
+        },
+        "dbUserName": {
+            "value": "aseeDataBase"
+        },
+        "dbPassword": {
+            "value": "aseeDataBase@1234567"
+        },
+        "appSubnet": {
+            "value": "app"
+        }
+    }
+}

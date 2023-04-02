@@ -1,0 +1,14 @@
+{
+    "Name": "Activity1",
+    "IsCustom": "true",
+    "Description": "Create a custom role with Read permissions on virtual machines as well",
+
+    "Actions": [
+        "Microsoft.Storage/storageAccounts/blobServices/containers/read",
+        "Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey/action",
+        "Microsoft.Compute/virtualMachines/*/read",
+        "Microsoft.Compute/virtualMachines/*/delete",
+
+
+    ]
+}

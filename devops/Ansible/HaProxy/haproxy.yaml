@@ -1,0 +1,38 @@
+---
+- name: install haproxy on ubuntu
+  hosts: all
+  become: yes
+  tasks:
+    - name: install haproxy
+      ansible.builtin.apt:
+        name: haproxy
+        update_cache: yes
+        state: present
+      notify:
+       enable and restart haproxy
+    - name: start haproxy
+      ansible.builtin.systemd:
+        name: haproxy
+        daemon_reload: yes
+        state: started
+    - name: copy the file
+      ansible.builtin.copy:
+        src: /etc/haproxy/haproxy.cfg
+        dest: /etc/haproxy/haproxy.cfg.bk
+      notify:
+       enable and restart haproxy  
+    - name: Add frontend, backend servers and listen state on configuration file
+      ansible.builtin.file:
+        src: haproxy.cfg
+        path: /etc/haproxy/haproxy.cfg
+      notify:
+       enable and restart haproxy  
+  handlers: 
+    - name: enable and restart haproxy
+      ansible.builtin.systemd:
+        name: haproxy
+        enabled: yes
+        state: restarted
+            
+          
+                
