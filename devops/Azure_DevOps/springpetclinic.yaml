@@ -1,14 +1,14 @@
----
-pool
-  name: "Azure Pipelines"
-  vmImage: ubuntu-latest
+# ---
+# pool
+#   name: "Azure Pipelines"
+#   vmImage: ubuntu-latest
   
-trigger:
-  - main
+# trigger:
+#   - main
   
-steps:
-  - task: Maven@4
-    inputs:
-      mavenPOMFile: 'pom.xml'
-      goals: 'package'
-      jdkVersionOption: '1.17'
+# steps:
+#   - task: Maven@4
+#     inputs:
+#       mavenPOMFile: 'pom.xml'
+#       goals: 'package'
+#       jdkVersionOption: '1.17'

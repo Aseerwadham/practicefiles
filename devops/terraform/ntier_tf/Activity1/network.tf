@@ -27,6 +27,7 @@ resource "azurerm_subnet" "subnets" {
   resource_group_name  = azurerm_resource_group.ntierrg.name
   virtual_network_name = azurerm_virtual_network.ntiervnet.name
   address_prefixes     = [cidrsubnet(var.vnet_range[0], 8, count.index)]
+
   depends_on = [
     azurerm_virtual_network.ntiervnet
   ]

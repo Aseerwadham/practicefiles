@@ -7,7 +7,7 @@ param region string = location
 var name string = 'rgname'
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2022-07-01' = {
-  name: rgname
+  name: vnetname
   location: region
   properties: {
     addressSpace: {

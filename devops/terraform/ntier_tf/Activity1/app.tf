@@ -1,3 +1,14 @@
+resource "azurerm_public_ip" "pubip" {
+  name                = "acceptanceTestPublicIp1"
+  resource_group_name = azurerm_resource_group.ntierrg.name
+  location            = azurerm_resource_group.ntierrg.location
+  allocation_method   = "Dynamic"
+  tags = {
+    Env       = "Dev"
+    CreatedBy = "Terraform"
+  }
+}
+
 resource "azurerm_network_interface" "appserver_nic" {
   name                = var.network_interface_info.name
   location            = azurerm_resource_group.ntierrg.location
@@ -33,7 +44,7 @@ resource "azurerm_linux_virtual_machine" "appserver" {
   source_image_reference {
     publisher = "Canonical"
     offer     = "0001-com-ubuntu-server-focal"
-    sku       = "20_04-lts-gen2"
+    sku       = "20_04-lts"
     version   = "latest"
   }
   depends_on = [

@@ -18,13 +18,13 @@ resource "azurerm_resource_group" "aseepractice" {
   
 }
 
-resource "azurerm_storage_account" "aseestorage" {
-   name = "aseepractice"
-   resource_group_name = azurerm_resource_group.aseepractice.name
-   location = azurerm_resource_group.aseepractice.location
-   access_tier = "Standard"
-   account_replication_type = "GRS"
-   tags = {
-    environment = "staging"
-   }
-}
+# resource "azurerm_storage_account" "aseestorage" {
+#    name = "aseepractice"
+#    resource_group_name = azurerm_resource_group.aseepractice.name
+#    location = azurerm_resource_group.aseepractice.location
+#    access_tier = "Standard"
+#    account_replication_type = "GRS"
+#    tags = {
+#     environment = "staging"
+#    }
+# }
